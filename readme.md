@@ -99,51 +99,51 @@ GOES CDF
            /
 WIND CDF /
 
-↓
+        ↓
 
 Physics-Based Time Alignment
 
-↓
+        ↓
 
 Quality Control
 
-↓
+        ↓
 
 Gap Handling
 
-↓
+        ↓
 
 Feature Engineering
 
-↓
+        ↓
 
 Feature Selection
 
-↓
+        ↓
 
 Sliding Window Construction
 
-↓
+        ↓
 
 Hybrid Forecast Model
 
-↓
+        ↓
 
 Multi-Horizon Prediction
 
-↓
+        ↓
 
 Physics Constraints
 
-↓
+        ↓
 
 Uncertainty Estimation
 
-↓
+        ↓
 
 Operational Alerts
 
-↓
+        ↓
 
 Visualization Dashboard
 ```
@@ -527,6 +527,6 @@ PRAGYA-AI/
 
 # Team ORCA
 
-Developed for the **Bharatiya Antariksh Hackathon (ISRO)** 🚀
+Developed for the **Bharatiya Antariksh Hackathon (ISRO)**
 
 Building the next generation of **AI-powered operational space weather forecasting**.
