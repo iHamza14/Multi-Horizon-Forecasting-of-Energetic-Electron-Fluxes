@@ -1,7 +1,7 @@
 # PRAGYA AI
 ### Predictive Radiation Analysis for Geostationary Applications
 
-> Physics-Informed Multi-Horizon Forecasting of Energetic Electron Fluxes for ISRO Geostationary Satellites
+> Physics-Informed Multi-Horizon Forecasting of Energetic Electron Fluxes for ISRO's Geostationary Satellites
 
 ---
 
@@ -9,33 +9,40 @@
 
 PRAGYA AI is a physics-informed deep learning framework designed to forecast energetic (>2 MeV) electron fluxes at geostationary orbit.
 
-The objective is to provide reliable forecasts
+The system combines historical GOES electron flux measurements with upstream solar wind observations from the WIND spacecraft to generate reliable forecasts at multiple prediction horizons.
 
-- 30–45 minutes ahead
-- 6 hours ahead
-- 12 hours ahead
+Unlike traditional forecasting systems that rely solely on computationally intensive physics simulations or purely data-driven machine learning models, PRAGYA AI integrates heliophysics knowledge directly into the learning pipeline to improve robustness, interpretability, and operational reliability during extreme space weather events.
 
-using historical GOES electron flux measurements together with upstream solar wind observations from the WIND spacecraft.
+### Forecast Horizons
 
-Unlike conventional forecasting systems, PRAGYA AI combines heliophysics knowledge with deep learning to improve robustness during geomagnetic storms while maintaining operational feasibility.
+- ⚡ **45 Minutes**
+- ⏳ **6 Hours**
+- 🌍 **12 Hours**
+
+---
+
+# Dashboard Preview
+
+The PRAGYA AI dashboard provides real-time visualization of energetic electron flux forecasts, operational alerts, confidence estimation, and important solar wind parameters through a single interface.
+
+<p align="center">
+  <img src="docs/dashboard.png" width="95%">
+</p>
 
 ---
 
 # Problem Statement
 
-Energetic electrons trapped within Earth's outer radiation belt can damage satellites through
+Energetic electrons trapped within Earth's outer radiation belt pose a serious threat to geostationary satellites by causing
 
 - Surface charging
 - Deep dielectric charging
 - Solar panel degradation
 - Electronic component failures
 
-Current forecasting techniques either
+Predicting these high-energy particle environments before severe geomagnetic disturbances allows satellite operators to take preventive measures and reduce mission risk.
 
-- rely heavily on computationally expensive physics simulations, or
-- purely data-driven machine learning models that struggle during extreme space weather events.
-
-This project aims to bridge both approaches by integrating physical understanding directly into the AI pipeline.
+PRAGYA AI addresses this challenge by combining physical understanding of the magnetosphere with modern deep learning architectures for operational space weather forecasting.
 
 ---
 
@@ -44,9 +51,9 @@ This project aims to bridge both approaches by integrating physical understandin
 - Read and process GOES and WIND satellite CDF datasets
 - Build a robust preprocessing pipeline
 - Engineer physically meaningful features
-- Train a hybrid deep learning architecture
-- Generate forecasts for multiple prediction horizons
-- Quantify uncertainty
+- Train a hybrid Transformer–BiLSTM forecasting model
+- Generate multi-horizon forecasts
+- Estimate prediction uncertainty
 - Produce operational risk alerts
 - Validate predictions against ISRO GRASP observations
 
@@ -57,41 +64,40 @@ This project aims to bridge both approaches by integrating physical understandin
 ## GOES
 
 - >2 MeV Electron Flux
-- 11 years
+- 11 Years
 - 5-minute cadence
-- CDF format
+- CDF Format
 
 ---
 
 ## WIND
 
-Solar wind parameters
+Solar Wind Parameters
 
-- Speed
-- Density
+- Solar Wind Speed
+- Plasma Density
 - IMF Components
 - Magnetic Field Strength
 
-11 years of observations
+11 Years of observations
 
 ---
 
 ## ISRO GRASP
 
-Used only for independent validation.
+Used exclusively for independent model validation.
 
 ---
 
 # Overall Pipeline
 
-```
+```text
 GOES CDF
           \
            \
             ---> Data Ingestion
            /
 WIND CDF /
-         
 
 ↓
 
@@ -144,79 +150,73 @@ Visualization Dashboard
 
 ---
 
+# Hybrid Forecasting Architecture
+
+The forecasting engine combines Transformer-based global temporal modeling with BiLSTM-based local sequence learning to capture both long-term radiation belt evolution and rapid geomagnetic disturbances.
+
+<p align="center">
+  <img src="docs/architecture.png" width="95%">
+</p>
+
+---
+
 # System Architecture
 
-The project consists of three major modules.
+The complete forecasting system is divided into five independent modules.
 
+```text
+Satellite Data
+      │
+      ▼
+Preprocessing Pipeline
+      │
+      ▼
+Feature Engineering
+      │
+      ▼
+Hybrid Forecast Engine
+      │
+      ▼
+Operational Decision Support
 ```
-Data Layer
-      ↓
-Preprocessing Layer
-      ↓
-Forecasting Engine
-      ↓
-Post Processing
-      ↓
-Visualization
-```
+
+Each module is independently developed, tested, and optimized to simplify maintenance and future improvements.
 
 ---
 
 # Phase 1 — Data Preprocessing
 
-The preprocessing pipeline converts raw satellite observations into machine learning ready tensors.
-
-## Steps
+The preprocessing pipeline transforms raw satellite telemetry into machine-learning-ready tensors.
 
 ### Reading CDF Files
 
 - Parse GOES observations
 - Parse WIND observations
 - Convert timestamps
-- Merge observations
-
----
+- Merge datasets
 
 ### Physics-Based Time Alignment
 
-Solar wind measured at the L1 point reaches Earth after approximately 30–80 minutes.
+Solar wind measurements collected near the L1 point require approximately 30–80 minutes to reach geostationary orbit.
 
-Instead of directly joining timestamps, solar wind observations are shifted using propagation delay.
-
-This prevents look-ahead bias during training.
-
----
+Instead of directly matching timestamps, observations are shifted using solar wind propagation delay, eliminating look-ahead bias during training.
 
 ### Data Cleaning
 
 - Remove corrupted measurements
-- Remove spikes
+- Detect and eliminate spikes
 - Handle missing observations
 - Cross-calibrate multiple satellites
 
----
+### Gap Handling
 
-### Gap Filling
-
-Short gaps
-
-- Linear interpolation
-
-Medium gaps
-
-- Physics-based exponential decay
-
-Large gaps
-
-- Removed from training
-
----
+- Short gaps → Linear interpolation
+- Medium gaps → Physics-based exponential decay
+- Long gaps → Excluded from training
 
 ### Feature Engineering
 
-Raw measurements are transformed into physically meaningful variables.
-
-Examples include
+Important derived physical variables include
 
 - Dynamic Pressure
 - Southward IMF
@@ -224,41 +224,32 @@ Examples include
 - Newell Coupling Function
 - Magnetic Local Time
 
----
-
 ### Feature Selection
 
-Features are ranked using
+Features are selected using
 
 - Mutual Information
 - Correlation Analysis
-- Physical relevance
-
-Only the most informative variables are retained.
-
----
+- Physical significance
 
 ### Sequence Generation
 
-Historical observations are converted into sliding windows.
-
-Example
+Historical observations are converted into sliding windows for supervised learning.
 
 ```
-Past 24 Hours
-↓
-
-Window
+Past Observations
 
 ↓
 
-Target
+Sliding Window
+
+↓
+
+Prediction Targets
 
 45 min
-
-6 hour
-
-12 hour
+6 hr
+12 hr
 ```
 
 ---
@@ -267,7 +258,7 @@ Target
 
 The forecasting engine combines recurrent neural networks with transformers.
 
-```
+```text
 Input Tensor
 
 ↓
@@ -284,7 +275,7 @@ BiLSTM Encoder
 
 ↓
 
-Temporal Attention
+Temporal Attention Pooling
 
 ↓
 
@@ -292,291 +283,230 @@ Shared Representation
 
 ↓
 
-Prediction Heads
+Decoder
 
-├── 45 min
+├── 45 Minutes
 
-├── 6 hr
+├── 6 Hours
 
-└── 12 hr
+└── 12 Hours
 ```
-
----
 
 ## Why Hybrid?
 
-Transformer
+### Transformer
 
-- Long-range dependencies
-- Global context
+- Learns global temporal dependencies
+- Captures long-term radiation belt evolution
 
-BiLSTM
+### BiLSTM
 
-- Local temporal dynamics
-- Storm evolution
+- Learns local temporal dynamics
+- Models rapid geomagnetic disturbances
 
-Together they learn both
-
-- rapid disturbances
-- slow radiation belt evolution
+The hybrid architecture combines both strengths, producing stable and accurate forecasts across multiple prediction horizons.
 
 ---
 
 # Multi-Horizon Forecasting
 
-The network predicts
+Instead of training separate models for different lead times, PRAGYA AI predicts all forecasting horizons simultaneously from a shared latent representation.
 
-```
-T + 45 min
+This improves temporal consistency while reducing computational complexity.
 
-T + 6 hr
+---
 
-T + 12 hr
-```
+# Model Validation
 
-simultaneously from one shared representation.
+The trained model is evaluated against independent GRASP observations to verify forecasting accuracy across multiple prediction horizons.
 
-This ensures consistent forecasts across different prediction horizons.
+The figure below compares observed and predicted energetic electron fluxes for the 45-minute and 6-hour forecasts.
+
+<p align="center">
+  <img src="docs/validation-results.png" width="95%">
+</p>
 
 ---
 
 # Phase 3 — Post Processing
 
-Raw neural network outputs are converted into operational forecasts.
+Raw neural network outputs are converted into operational forecasts through a lightweight post-processing pipeline.
 
 This stage includes
 
 - Adaptive bias correction
 - Physical constraints
 - Confidence estimation
-- Risk classification
+- Operational risk classification
 
----
+### Adaptive Learning
 
-## Adaptive Learning
+Recent prediction errors are continuously monitored using rolling statistics to compensate for
 
-Recent prediction errors are continuously monitored.
-
-Rolling statistics are used to compensate for
-
-- sensor drift
-- seasonal variation
-- solar cycle changes
+- Sensor drift
+- Seasonal variation
+- Solar cycle changes
 
 without retraining the neural network.
 
----
+### Physics Constraints
 
-## Physics Constraints
+Operational forecasts are constrained to remain physically realistic.
 
-Predictions are constrained to remain physically realistic.
-
-Examples
+Examples include
 
 - Non-negative flux
 - Maximum allowable flux
 - Maximum decay rate
 
----
+### Confidence Estimation
 
-## Confidence Estimation
-
-Prediction uncertainty is estimated using rolling historical error statistics.
-
-Each forecast is accompanied by
-
-- confidence interval
-- uncertainty score
+Prediction uncertainty is estimated using rolling historical error statistics, allowing every forecast to include confidence bounds.
 
 ---
 
-## Risk Classification
+# Risk Classification
 
-Forecasts are mapped into operational alerts.
+Forecasts are translated into operational alerts.
 
 | Level | Description |
-|---------|------------|
-| 🟢 Green | Normal |
-| 🟡 Yellow | Elevated |
-| 🔴 Red | High Radiation |
+|--------|-------------|
+| 🟢 Green | Normal Conditions |
+| 🟡 Yellow | Elevated Radiation Risk |
+| 🔴 Red | Severe Radiation Environment |
+
+---
+
+# Benchmark Comparison
+
+The proposed Hybrid Transformer–BiLSTM architecture is benchmarked against standalone Transformer and BiLSTM models.
+
+The hybrid architecture consistently demonstrates improved forecasting stability while maintaining higher accuracy across all prediction horizons.
+
+<p align="center">
+  <img src="docs/benchmark-comparison.png" width="90%">
+</p>
 
 ---
 
 # Visualization
 
-The web dashboard provides
+The dashboard provides
 
-- Historical observations
-- Live predictions
-- Multi-horizon forecasts
-- Confidence intervals
-- Solar wind monitoring
-- Risk alerts
+- Live Electron Flux Forecasts
+- Historical Observations
+- Multi-Horizon Predictions
+- Confidence Estimation
+- Solar Wind Monitoring
+- Radiation Risk Alerts
+- Operational Decision Support
 
 ---
 
 # Repository Structure
 
-```
+```text
 PRAGYA-AI/
 
+├── docs/
+│   ├── architecture.png
+│   ├── validation-results.png
+│   ├── benchmark-comparison.png
+│   └── dashboard.png
 │
-
 ├── data/
-
-│ ├── raw/
-
-│ ├── processed/
-
-│ └── validation/
-
+│   ├── raw/
+│   ├── processed/
+│   └── validation/
 │
-
 ├── notebooks/
-
-│
-
 ├── preprocessing/
-
-│
-
 ├── feature_engineering/
-
-│
-
 ├── models/
-
-│ ├── bilstm/
-
-│ ├── transformer/
-
-│ └── hybrid/
-
+│   ├── bilstm/
+│   ├── transformer/
+│   └── hybrid/
 │
-
 ├── training/
-
-│
-
 ├── evaluation/
-
-│
-
 ├── inference/
-
-│
-
 ├── dashboard/
-
-│
-
 ├── utils/
-
-│
-
 ├── configs/
-
-│
-
 ├── tests/
-
-│
-
 └── README.md
 ```
 
 ---
 
-# Technology Stack
+# Tech Stack
 
-## AI / ML
+### Artificial Intelligence
 
-- Python
 - PyTorch
-- NumPy
-- Pandas
 - Scikit-learn
 
----
+### Scientific Computing
 
-## Data Processing
-
+- NumPy
+- Pandas
+- SciPy
 - cdflib
 - xarray
-- SciPy
 
----
+### Visualization
 
-## Visualization
-
-- Plotly
 - Matplotlib
+- Plotly
 
----
-
-## Backend
+### Backend
 
 - FastAPI
 
----
-
-## Frontend
+### Frontend
 
 - React
 - TypeScript
 - Tailwind CSS
 
----
-
-## Deployment
+### Deployment
 
 - Docker
 - ONNX Runtime
 
 ---
 
-# Development Roadmap
+# Implementation Roadmap
 
-## Phase 1
+### Phase 1
 
-- Dataset collection
-- CDF parser
-- Data preprocessing
+- Dataset Collection
+- CDF Parsing
+- Data Preprocessing
 
----
+### Phase 2
 
-## Phase 2
+- Feature Engineering
+- Dataset Generation
+- Exploratory Analysis
 
-- Feature engineering
-- Dataset generation
-- Exploratory analysis
+### Phase 3
 
----
-
-## Phase 3
-
-- Baseline models
+- Baseline Models
 - LSTM
 - Transformer
-- XGBoost
 
----
+### Phase 4
 
-## Phase 4
+- Hybrid Transformer–BiLSTM Development
 
-- Hybrid BiLSTM Transformer
+### Phase 5
 
----
-
-## Phase 5
-
-- Hyperparameter optimization
+- Hyperparameter Optimization
 - Validation
 - Benchmarking
 
----
-
-## Phase 6
+### Phase 6
 
 - Dashboard
 - APIs
@@ -584,12 +514,12 @@ PRAGYA-AI/
 
 ---
 
-# Expected Deliverables
+# Project Deliverables
 
-- Physics-informed forecasting pipeline
-- Multi-horizon prediction model
-- Operational web dashboard
-- Risk alert system
+- Physics-informed preprocessing pipeline
+- Multi-horizon forecasting model
+- Operational dashboard
+- Risk alert engine
 - Independent GRASP validation
 - Open-source implementation
 
@@ -597,4 +527,6 @@ PRAGYA-AI/
 
 # Team ORCA
 
-Developed as part of the Bharatiya Antariksh Hackathon (ISRO)
+Developed for the **Bharatiya Antariksh Hackathon (ISRO)** 🚀
+
+Building the next generation of **AI-powered operational space weather forecasting**.
